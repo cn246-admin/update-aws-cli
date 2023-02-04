@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 script_path="$HOME/Projects/aws/0"
 requirements_txt="${script_path}/requirements.txt"
@@ -9,13 +9,13 @@ upgrade_modules () {
 }
 
 # Check venv exists
-if [[ ! -f "${venv_path}/bin/activate" ]]; then
+if [ ! -f "${venv_path}/bin/activate" ]; then
   printf '%s\n' "Could not find ${venv_path}/bin/activate. Exiting"
   exit 1
 fi
 
 # Check for requirements.txt file
-if [[ ! -f "${requirements_txt}" ]]; then
+if [ ! -f "${requirements_txt}" ]; then
   cat << EOF > "${requirements_txt}"
 boto3>=1.24.80
 cfn-lint>=0.65.1
@@ -25,7 +25,7 @@ EOF
 fi
 
 # Check if venv is active and upgrade modules
-if [[ "$VIRTUAL_ENV" == "$venv_path" ]]; then
+if [ "$VIRTUAL_ENV" = "$venv_path" ]; then
   upgrade_modules
 else
   source "${venv_path}/bin/activate"
