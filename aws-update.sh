@@ -12,7 +12,7 @@
 awsdir="$HOME/.local/aws-cli"
 awsver="$(aws --version | cut -d' ' -f1 | cut -d'/' -f2)"
 bindir="$HOME/.local/bin"
-os="$(uname)"
+os="$(uname -s)"
 tmpdir="$(mktemp -d /tmp/aws.XXXXXXXX)"
 
 
