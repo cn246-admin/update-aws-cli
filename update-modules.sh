@@ -16,8 +16,12 @@ fi
 
 # Check for requirements.txt file
 if [[ ! -f "${requirements_txt}" ]]; then
-  printf '%s\n' "Could not find ${requirements_txt}. Exiting"
-  exit 1
+  cat << EOF > "${requirements_txt}"
+boto3>=1.24.80
+cfn-lint>=0.65.1
+pip>=22.3.1
+yamllint>=1.28.0
+EOF
 fi
 
 # Check if venv is active and upgrade modules
