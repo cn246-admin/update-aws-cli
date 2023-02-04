@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Description: Install and/or update aws cli
+# https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 # Check latest version release notes:
 #   https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst
 # Author: Chuck Nemeth
@@ -12,7 +13,7 @@ awsdir="$HOME/.local/aws-cli"
 awsver="$(aws --version | cut -d' ' -f1 | cut -d'/' -f2)"
 bindir="$HOME/.local/bin"
 os="$(uname)"
-tmpdir="$(mktemp -d aws.XXXXXX)"
+tmpdir="$(mktemp -d /tmp/aws.XXXXXXXX)"
 
 
 #######################
@@ -179,7 +180,7 @@ read -r choice
 case "${choice}" in
   [yY]|[yY]es)
     printf '%s\n' "Cleaning up install files"
-    rm -f "choices.xml" "${installer}" "CHANGELOG.rst"
+    cd ../ && rm -rf "${tmpdir}"
     ;;
   *)
     printf '%s\n' "Exiting without deleting files from ${tmpdir}"
