@@ -74,7 +74,7 @@ esac
 
 if [ "${available}" = "${awsver}" ]; then
   printf '%s\n' "Already using latest version. Exiting."
-  rm -f "CHANGELOG.rst"
+  cd && rm -rf "${tmpdir}"
   exit
 else
   printf '%s\n' "Installed Verision: ${awsver}"
@@ -168,8 +168,8 @@ esac
 #######################
 # VERSION CHECK
 #######################
-printf '%s\n' "OLD VERSION: ${awsver}"
-printf '%s\n' "NEW VERSION: $(aws --version | cut -d' ' -f1 | cut -d'/' -f2)"
+printf '%s\n' "Old Version: ${awsver}"
+printf '%s\n' "Installed Version: $(aws --version | cut -d' ' -f1 | cut -d'/' -f2)"
 
 
 #######################
