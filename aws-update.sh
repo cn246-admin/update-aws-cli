@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Description: Install and/or update aws cli
+# Description: Install and/or update aws cli on Linux or Mac
 # https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 # Check latest version release notes:
 #   https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst
