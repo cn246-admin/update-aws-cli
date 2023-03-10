@@ -9,9 +9,10 @@
 #######################
 # VARIABLES
 #######################
-awsdir="$HOME/.local/aws-cli"
 awsver="$(aws --version | cut -d' ' -f1 | cut -d'/' -f2)"
 bindir="$HOME/.local/bin"
+srcdir="$HOME/.local/src"
+awsdir="${srcdir}/aws-cli"
 os="$(uname -s)"
 tmpdir="$(mktemp -d /tmp/aws.XXXXXXXX)"
 
@@ -136,7 +137,7 @@ case "${os}" in
       <key>choiceAttribute</key>
       <string>customLocation</string>
       <key>attributeSetting</key>
-      <string>/Users/$(whoami)/.local/</string>
+      <string>${srcdir}</string>
       <key>choiceIdentifier</key>
       <string>default</string>
     </dict>
