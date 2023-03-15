@@ -9,12 +9,58 @@
 #######################
 # VARIABLES
 #######################
-awsver="$(aws --version | awk -F' |/' '{print $2}')"
-bindir="$HOME/.local/bin"
-srcdir="$HOME/.local/src"
-awsdir="${srcdir}/aws-cli"
+bin_dir="$HOME/.local/bin"
+src_dir="$HOME/.local/src"
+aws_dir="${src_dir}/aws-cli"
 os="$(uname -s)"
-tmpdir="$(mktemp -d /tmp/aws.XXXXXXXX)"
+tmp_dir="$(mktemp -d /tmp/aws.XXXXXXXX)"
+
+if command -v yq >/dev/null; then
+  aws_installed_version="$(aws --version | awk -F' |/' '{print $2}')"
+else
+  aws_installed_version="Not Installed"
+fi
+
+#######################
+# FUNCTIONS
+#######################
+# clean_up
+clean_up () {
+  printf "Would you like to delete the tmp_dir and the downloaded files? (Yy/Nn) "
+  read -r choice
+  case "${choice}" in
+    [yY]|[yY]es)
+      printf '%s\n' "Cleaning up install files"
+      cd && rm -rf "${tmp_dir}"
+      exit "${1}"
+      ;;
+    *)
+      printf '%s\n' "Exiting without deleting files from ${tmp_dir}"
+      exit "${1}"
+      ;;
+  esac
+}
+
+# green output
+code_grn () {
+  tput setaf 2
+  printf '%s\n' "${1}"
+  tput sgr0
+}
+
+# red output
+code_red () {
+  tput setaf 1
+  printf '%s\n' "${1}"
+  tput sgr0
+}
+
+# yellow output
+code_yel () {
+  tput setaf 3
+  printf '%s\n' "${1}"
+  tput sgr0
+}
 
 
 #######################
@@ -33,7 +79,7 @@ case "${os}" in
     gpg_key="FB5DB77FD5C118B80511ADA8A6310ACC4672475C"
     ;;
   *)
-    printf '%s\n' "Unsupported OS. Exiting"
+    code_red "[ERROR] Unsupported OS. Exiting"
     exit 1
 esac
 
@@ -42,18 +88,18 @@ esac
 # PATH CHECK
 #######################
 case :$PATH: in
-  *:"${bindir}":*)  ;;  # do nothing
+  *:"${bin_dir}":*)  ;;  # do nothing
   *)
-    printf '%s\n' "ERROR ${bindir} was not found in \$PATH!"
-    printf '%s\n' "Add ${bindir} to PATH or select another directory to install to"
+    code_red "[ERROR] ${bin_dir} was not found in \$PATH!"
+    printf '%s\n' "Add ${bin_dir} to PATH or select another directory to install to"
     exit 1
     ;;
 esac
 
-if [ -d "${tmpdir}" ]; then
-  cd "${tmpdir}" || exit
+if [ -d "${tmp_dir}" ]; then
+  cd "${tmp_dir}" || exit
 else
-  printf '%s\n' "${tmpdir} doesn't exist."
+  code_red "[ERROR] ${tmp_dir} doesn't exist."
   exit 1
 fi
 
@@ -73,12 +119,11 @@ case "${os}" in
     ;;
 esac
 
-if [ "${available}" = "${awsver}" ]; then
-  printf '%s\n' "Already using latest version. Exiting."
-  cd && rm -rf "${tmpdir}"
-  exit
+if [ "${available}" = "${aws_installed_version}" ]; then
+  code_yel "[WARN] Already using latest version. Exiting."
+  clean_up 0
 else
-  printf '%s\n' "Installed Verision: ${awsver}"
+  printf '%s\n' "Installed Verision: ${aws_installed_version}"
   printf '%s\n' "Latest Version: ${available}"
 fi
 
@@ -96,9 +141,9 @@ curl -s "${awsurl}" -o "${installer}"
 if [ "${os}" = "Linux" ]; then
   printf '%s\n' "Downloading aws-cli installer signature file"
   if ! gpg -k "${gpg_key}"; then
-    printf '%s\n' "AWS GPG Key not found"
+    code_yel "[WARN] AWS GPG Key not found"
     printf '%s\n' "Get it from here: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html"
-    exit 1
+    clean_up 1
   else
     curl -s "${sigurl}" -o "${sigfile}"
   fi
@@ -108,16 +153,16 @@ fi
 #######################
 # PREPARE
 #######################
-if [ ! -d "${bindir}" ]; then
-  printf '%s\n' "Creating ${bindir}"
-  mkdir -p "${bindir}"
+if [ ! -d "${bin_dir}" ]; then
+  printf '%s\n' "Creating ${bin_dir}"
+  mkdir -p "${bin_dir}"
 fi
 
 printf '%s\n' "Removing old version"
-if [ -d "${awsdir}" ]; then
-  rm -f "${bindir}/aws"
-  rm -f "${bindir}/aws_completer"
-  rm -rf "${awsdir}"
+if [ -d "${aws_dir}" ]; then
+  rm -f "${bin_dir}/aws"
+  rm -f "${bin_dir}/aws_completer"
+  rm -rf "${aws_dir}"
 fi
 
 
@@ -137,7 +182,7 @@ case "${os}" in
       <key>choiceAttribute</key>
       <string>customLocation</string>
       <key>attributeSetting</key>
-      <string>${srcdir}</string>
+      <string>${src_dir}</string>
       <key>choiceIdentifier</key>
       <string>default</string>
     </dict>
@@ -151,16 +196,16 @@ EOF
       fi
 
       printf '%s\n' "Creating symlinks"
-      ln -s "${awsdir}/aws" "${bindir}/aws"
-      ln -s "${awsdir}/aws_completer" "${bindir}/aws_completer"
+      ln -s "${aws_dir}/aws" "${bin_dir}/aws"
+      ln -s "${aws_dir}/aws_completer" "${bin_dir}/aws_completer"
       ;;
   "Linux")
       if gpg --verify "${sigfile}" "${installer}"; then
           unzip -q "${installer}"
-          ./aws/install --bin-dir "${bindir}" --install-dir "${awsdir}"
+          ./aws/install --bin-dir "${bin_dir}" --install-dir "${aws_dir}"
       else
-          printf '%s\n' "File failed GPG verification. Exiting."
-          exit 1
+          code_red "[ERROR] File failed GPG verification. Exiting."
+          clean_up 1
       fi
       ;;
 esac
@@ -169,24 +214,13 @@ esac
 #######################
 # VERSION CHECK
 #######################
-printf '%s\n' "Old Version: ${awsver}"
-printf '%s\n' "Installed Version: $(aws --version | cut -d' ' -f1 | cut -d'/' -f2)"
+code_grn "Old Version: ${aws_installed_version}"
+code_grn "Installed Version: $(aws --version | cut -d' ' -f1 | cut -d'/' -f2)"
 
 
 #######################
 # CLEAN UP
 #######################
-printf "Would you like to delete the install files? (Yy/Nn) "
-read -r choice
-case "${choice}" in
-  [yY]|[yY]es)
-    printf '%s\n' "Cleaning up install files"
-    cd ../ && rm -rf "${tmpdir}"
-    ;;
-  *)
-    printf '%s\n' "Exiting without deleting files from ${tmpdir}"
-    exit 0
-    ;;
-esac
+clean_up 0
 
 # vim: ft=sh ts=2 sts=2 sw=2 sr et
