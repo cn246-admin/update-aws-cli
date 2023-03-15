@@ -9,7 +9,7 @@
 #######################
 # VARIABLES
 #######################
-awsver="$(aws --version | cut -d' ' -f1 | cut -d'/' -f2)"
+awsver="$(aws --version | awk -F' |/' '{print $2}')"
 bindir="$HOME/.local/bin"
 srcdir="$HOME/.local/src"
 awsdir="${srcdir}/aws-cli"
