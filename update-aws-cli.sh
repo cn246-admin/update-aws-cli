@@ -107,7 +107,6 @@ fi
 #######################
 # VERSION CHECK
 #######################
-printf '%s\n' "Downloading CHANGELOG.rst from aws GitHub"
 curl -s -O https://raw.githubusercontent.com/aws/aws-cli/v2/CHANGELOG.rst
 
 case "${os}" in
@@ -120,7 +119,9 @@ case "${os}" in
 esac
 
 if [ "${available}" = "${aws_installed_version}" ]; then
-  code_yel "[WARN] Already using latest version. Exiting."
+  printf '%s\n' "Installed Verision: ${aws_installed_version}"
+  printf '%s\n' "Latest Version: ${available}"
+  code_yel "[INFO] Already using latest version. Exiting."
   clean_up 0
 else
   printf '%s\n' "Installed Verision: ${aws_installed_version}"
@@ -141,7 +142,7 @@ curl -s "${awsurl}" -o "${installer}"
 if [ "${os}" = "Linux" ]; then
   printf '%s\n' "Downloading aws-cli installer signature file"
   if ! gpg -k "${gpg_key}"; then
-    code_yel "[WARN] AWS GPG Key not found"
+    code_red "[ERROR] AWS GPG Key not found"
     printf '%s\n' "Get it from here: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html"
     clean_up 1
   else
@@ -156,6 +157,11 @@ fi
 if [ ! -d "${bin_dir}" ]; then
   printf '%s\n' "Creating ${bin_dir}"
   mkdir -p "${bin_dir}"
+fi
+
+if [ ! -d "${src_dir}" ]; then
+  printf '%s\n' "Creating ${src_dir}"
+  mkdir -p "${src_dir}"
 fi
 
 printf '%s\n' "Removing old version"
