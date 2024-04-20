@@ -23,16 +23,14 @@ fi
 # FUNCTIONS
 # delete temporary install files
 clean_up () {
-  printf "Would you like to delete the tmp_dir and the downloaded files? (Yy/Nn) "
-  read -r choice
-  case "${choice}" in
-    [yY]|[yY]es)
-      printf '%s\n' "Cleaning up install files"
-      cd && rm -rf "${tmp_dir}"
+  case "${2}" in
+    [dD]|[dD]ebug)
+      printf '%s\n' "Exiting without deleting files from ${tmp_dir}"
       exit "${1}"
       ;;
     *)
-      printf '%s\n' "Exiting without deleting files from ${tmp_dir}"
+      printf '%s\n' "Cleaning up install files"
+      cd && rm -rf "${tmp_dir}"
       exit "${1}"
       ;;
   esac
