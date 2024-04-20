@@ -6,9 +6,7 @@
 #   https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst
 # Author: Chuck Nemeth
 
-#######################
 # VARIABLES
-#######################
 bin_dir="$HOME/.local/bin"
 src_dir="$HOME/.local/src"
 aws_dir="${src_dir}/aws-cli"
@@ -21,10 +19,9 @@ else
   aws_installed_version="Not Installed"
 fi
 
-#######################
+
 # FUNCTIONS
-#######################
-# clean_up
+# delete temporary install files
 clean_up () {
   printf "Would you like to delete the tmp_dir and the downloaded files? (Yy/Nn) "
   read -r choice
@@ -41,31 +38,13 @@ clean_up () {
   esac
 }
 
-# green output
-code_grn () {
-  tput setaf 2
-  printf '%s\n' "${1}"
-  tput sgr0
-}
-
-# red output
-code_red () {
-  tput setaf 1
-  printf '%s\n' "${1}"
-  tput sgr0
-}
-
-# yellow output
-code_yel () {
-  tput setaf 3
-  printf '%s\n' "${1}"
-  tput sgr0
-}
+# colored output
+code_grn () { tput setaf 2; printf '%s\n' "${1}"; tput sgr0; }
+code_red () { tput setaf 1; printf '%s\n' "${1}"; tput sgr0; }
+code_yel () { tput setaf 3; printf '%s\n' "${1}"; tput sgr0; }
 
 
-#######################
 # OS CHECK
-#######################
 case "${os}" in
   "Darwin")
     installer="AWSCLIV2.pkg"
@@ -84,9 +63,7 @@ case "${os}" in
 esac
 
 
-#######################
 # PATH CHECK
-#######################
 case :$PATH: in
   *:"${bin_dir}":*)  ;;  # do nothing
   *)
@@ -104,9 +81,7 @@ else
 fi
 
 
-#######################
 # VERSION CHECK
-#######################
 curl -s -O https://raw.githubusercontent.com/aws/aws-cli/v2/CHANGELOG.rst
 
 case "${os}" in
@@ -129,9 +104,7 @@ else
 fi
 
 
-#######################
 # DOWNLOAD
-#######################
 if [ -f "${installer}" ]; then
   rm -f "${installer}"
 fi
@@ -151,18 +124,9 @@ if [ "${os}" = "Linux" ]; then
 fi
 
 
-#######################
 # PREPARE
-#######################
-if [ ! -d "${bin_dir}" ]; then
-  printf '%s\n' "Creating ${bin_dir}"
-  mkdir -p "${bin_dir}"
-fi
-
-if [ ! -d "${src_dir}" ]; then
-  printf '%s\n' "Creating ${src_dir}"
-  mkdir -p "${src_dir}"
-fi
+[ ! -d "${bin_dir}" ] && install -m 0700 -d "${bin_dir}"
+[ ! -d "${src_dir}" ] && install -m 0700 -d "${src_dir}"
 
 printf '%s\n' "Removing old version"
 if [ -d "${aws_dir}" ]; then
@@ -172,9 +136,7 @@ if [ -d "${aws_dir}" ]; then
 fi
 
 
-#######################
 # INSTALL
-#######################
 printf '%s\n' "Installing new version"
 case "${os}" in
   "Darwin")
@@ -217,16 +179,12 @@ EOF
 esac
 
 
-#######################
 # VERSION CHECK
-#######################
 code_grn "Old Version: ${aws_installed_version}"
 code_grn "Installed Version: $(aws --version | cut -d' ' -f1 | cut -d'/' -f2)"
 
 
-#######################
 # CLEAN UP
-#######################
 clean_up 0
 
 # vim: ft=sh ts=2 sts=2 sw=2 sr et
