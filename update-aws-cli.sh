@@ -12,7 +12,7 @@ src_dir="$HOME/.local/src"
 aws_dir="${src_dir}/aws-cli"
 os="$(uname -s)"
 
-if command -v yq >/dev/null; then
+if command -v aws >/dev/null; then
   aws_installed_version="$(aws --version | awk -F' |/' '{print $2}')"
 else
   aws_installed_version="Not Installed"
@@ -44,10 +44,11 @@ case "${os}" in
     ;;
   "Linux")
     installer="awscliv2.zip"
-    awsurl="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
-    sigurl="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig"
+    awsurl="https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip"
+    sigurl="https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip.sig"
     sigfile="awscliv2.sig"
     gpg_key="FB5DB77FD5C118B80511ADA8A6310ACC4672475C"
+    if ! command -v unzip; then code_red "[ERROR] unzip not found. Please install and try again."; exit 1; fi
     ;;
   *)
     code_red "[ERROR] Unsupported OS. Exiting"
