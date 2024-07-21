@@ -69,13 +69,7 @@ trap clean_up EXIT
 
 # Create temp directory
 tmp_dir="$(mktemp -d /tmp/aws.XXXXXXXX)"
-
-if [ -d "${tmp_dir}" ]; then
-  cd "${tmp_dir}" || exit
-else
-  code_red "[ERROR] ${tmp_dir} doesn't exist."
-  exit 1
-fi
+cd "${tmp_dir}" || { code_red "[ERROR] ${tmp_dir} doesn't exist." &&  exit 1; }
 
 # Version Check
 curl -s -O https://raw.githubusercontent.com/aws/aws-cli/v2/CHANGELOG.rst
