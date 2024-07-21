@@ -11,7 +11,6 @@ bin_dir="$HOME/.local/bin"
 src_dir="$HOME/.local/src"
 aws_dir="${src_dir}/aws-cli"
 os="$(uname -s)"
-tmp_dir="$(mktemp -d /tmp/aws.XXXXXXXX)"
 
 if command -v yq >/dev/null; then
   aws_installed_version="$(aws --version | awk -F' |/' '{print $2}')"
@@ -19,30 +18,25 @@ else
   aws_installed_version="Not Installed"
 fi
 
-
-# FUNCTIONS
-# delete temporary install files
+# Delete temporary install files
 clean_up () {
   case "${2}" in
     [dD]|[dD]ebug)
-      printf '%s\n' "Exiting without deleting files from ${tmp_dir}"
-      exit "${1}"
+      printf '%s\n' "[INFO] Exiting without deleting files from ${tmp_dir}"
       ;;
     *)
-      printf '%s\n' "Cleaning up install files"
+      printf '%s\n' "[INFO] Cleaning up install files"
       cd && rm -rf "${tmp_dir}"
-      exit "${1}"
       ;;
   esac
 }
 
-# colored output
+# Colored output
 code_grn () { tput setaf 2; printf '%s\n' "${1}"; tput sgr0; }
 code_red () { tput setaf 1; printf '%s\n' "${1}"; tput sgr0; }
 code_yel () { tput setaf 3; printf '%s\n' "${1}"; tput sgr0; }
 
-
-# OS CHECK
+# OS Check
 case "${os}" in
   "Darwin")
     installer="AWSCLIV2.pkg"
@@ -60,8 +54,7 @@ case "${os}" in
     exit 1
 esac
 
-
-# PATH CHECK
+# PATH Check
 case :$PATH: in
   *:"${bin_dir}":*)  ;;  # do nothing
   *)
@@ -71,6 +64,12 @@ case :$PATH: in
     ;;
 esac
 
+# Run clean_up function on exit
+trap clean_up EXIT
+
+# Create temp directory
+tmp_dir="$(mktemp -d /tmp/aws.XXXXXXXX)"
+
 if [ -d "${tmp_dir}" ]; then
   cd "${tmp_dir}" || exit
 else
@@ -78,8 +77,7 @@ else
   exit 1
 fi
 
-
-# VERSION CHECK
+# Version Check
 curl -s -O https://raw.githubusercontent.com/aws/aws-cli/v2/CHANGELOG.rst
 
 case "${os}" in
@@ -95,50 +93,47 @@ if [ "${available}" = "${aws_installed_version}" ]; then
   printf '%s\n' "Installed Verision: ${aws_installed_version}"
   printf '%s\n' "Latest Version: ${available}"
   code_yel "[INFO] Already using latest version. Exiting."
-  clean_up 0
+  exit
 else
   printf '%s\n' "Installed Verision: ${aws_installed_version}"
   printf '%s\n' "Latest Version: ${available}"
 fi
 
-
-# DOWNLOAD
+# Download
 if [ -f "${installer}" ]; then
   rm -f "${installer}"
 fi
 
-printf '%s\n' "Downloading aws-cli installer"
+printf '%s\n' "[INFO] Downloading aws-cli installer"
 curl -s "${awsurl}" -o "${installer}"
 
 if [ "${os}" = "Linux" ]; then
-  printf '%s\n' "Downloading aws-cli installer signature file"
+  printf '%s\n' "[INFO] Downloading aws-cli installer signature file"
   if ! gpg -k "${gpg_key}"; then
     code_red "[ERROR] AWS GPG Key not found"
     printf '%s\n' "Get it from here: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html"
-    clean_up 1
+    exit 1
   else
     curl -s "${sigurl}" -o "${sigfile}"
   fi
 fi
 
-
-# PREPARE
+# Prepare
 [ ! -d "${bin_dir}" ] && install -m 0700 -d "${bin_dir}"
 [ ! -d "${src_dir}" ] && install -m 0700 -d "${src_dir}"
 
-printf '%s\n' "Removing old version"
+printf '%s\n' "[INFO] Removing old version"
 if [ -d "${aws_dir}" ]; then
   rm -f "${bin_dir}/aws"
   rm -f "${bin_dir}/aws_completer"
   rm -rf "${aws_dir}"
 fi
 
-
-# INSTALL
-printf '%s\n' "Installing new version"
+# Install
+printf '%s\n' "[INFO] Installing new version"
 case "${os}" in
   "Darwin")
-      printf '%s\n' "Creating installation config file"
+      printf '%s\n' "[INFO] Creating installation config file"
       cat << EOF > choices.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -161,7 +156,7 @@ EOF
                     -applyChoiceChangesXML choices.xml
       fi
 
-      printf '%s\n' "Creating symlinks"
+      printf '%s\n' "[INFO] Creating symlinks"
       ln -s "${aws_dir}/aws" "${bin_dir}/aws"
       ln -s "${aws_dir}/aws_completer" "${bin_dir}/aws_completer"
       ;;
@@ -171,18 +166,13 @@ EOF
           ./aws/install --bin-dir "${bin_dir}" --install-dir "${aws_dir}"
       else
           code_red "[ERROR] File failed GPG verification. Exiting."
-          clean_up 1
+          exit 1
       fi
       ;;
 esac
 
-
-# VERSION CHECK
+# Version Check
 code_grn "Old Version: ${aws_installed_version}"
 code_grn "Installed Version: $(aws --version | cut -d' ' -f1 | cut -d'/' -f2)"
-
-
-# CLEAN UP
-clean_up 0
 
 # vim: ft=sh ts=2 sts=2 sw=2 sr et
