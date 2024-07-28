@@ -41,7 +41,7 @@ case "${os}" in
     sigurl="https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip.sig"
     sigfile="awscliv2.sig"
     gpg_key="FB5DB77FD5C118B80511ADA8A6310ACC4672475C"
-    if ! command -v unzip 2>&1; then
+    if ! command -v unzip >/dev/null 2>&1; then
       code_red "[ERROR] unzip not found. Please install and try again."
       exit 1
     fi
