@@ -6,7 +6,18 @@
 #   https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst
 # Author: Chuck Nemeth
 
-# VARIABLES
+# Colored output
+code_grn() { tput setaf 2; printf '%s\n' "${1}"; tput sgr0; }
+code_red() { tput setaf 1; printf '%s\n' "${1}"; tput sgr0; }
+code_yel() { tput setaf 3; printf '%s\n' "${1}"; tput sgr0; }
+
+# Define function to delete temporary install files
+clean_up() {
+  printf '%s\n' "[INFO] Cleaning up install files"
+  cd && rm -rf "${tmp_dir}"
+}
+
+# Variables
 bin_dir="$HOME/.local/bin"
 src_dir="$HOME/.local/src"
 aws_dir="${src_dir}/aws-cli"
@@ -17,24 +28,6 @@ if command -v aws >/dev/null; then
 else
   aws_installed_version="Not Installed"
 fi
-
-# Delete temporary install files
-clean_up () {
-  case "${2}" in
-    [dD]|[dD]ebug)
-      printf '%s\n' "[INFO] Exiting without deleting files from ${tmp_dir}"
-      ;;
-    *)
-      printf '%s\n' "[INFO] Cleaning up install files"
-      cd && rm -rf "${tmp_dir}"
-      ;;
-  esac
-}
-
-# Colored output
-code_grn () { tput setaf 2; printf '%s\n' "${1}"; tput sgr0; }
-code_red () { tput setaf 1; printf '%s\n' "${1}"; tput sgr0; }
-code_yel () { tput setaf 3; printf '%s\n' "${1}"; tput sgr0; }
 
 # OS Check
 case "${os}" in
