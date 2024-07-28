@@ -23,7 +23,7 @@ src_dir="$HOME/.local/src"
 aws_dir="${src_dir}/aws-cli"
 os="$(uname -s)"
 
-if command -v aws >/dev/null; then
+if command -v aws >/dev/null 2>&1; then
   aws_installed_version="$(aws --version | awk -F' |/' '{print $2}')"
 else
   aws_installed_version="Not Installed"
