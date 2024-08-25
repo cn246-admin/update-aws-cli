@@ -7,8 +7,8 @@
 # Author: Chuck Nemeth
 
 # Colored output
+code_err() { tput setaf 1; printf '%s\n' "$*" >&2; tput sgr0; }
 code_grn() { tput setaf 2; printf '%s\n' "${1}"; tput sgr0; }
-code_red() { tput setaf 1; printf '%s\n' "${1}"; tput sgr0; }
 code_yel() { tput setaf 3; printf '%s\n' "${1}"; tput sgr0; }
 
 # Define function to delete temporary install files
@@ -42,12 +42,12 @@ case "${os}" in
     sigfile="awscliv2.sig"
     gpg_key="FB5DB77FD5C118B80511ADA8A6310ACC4672475C"
     if ! command -v unzip >/dev/null 2>&1; then
-      code_red "[ERROR] unzip not found. Please install and try again."
+      code_err "[ERROR] unzip not found. Please install and try again."
       exit 1
     fi
     ;;
   *)
-    code_red "[ERROR] Unsupported OS. Exiting"
+    code_err "[ERROR] Unsupported OS. Exiting"
     exit 1
 esac
 
@@ -55,7 +55,7 @@ esac
 case :$PATH: in
   *:"${bin_dir}":*)  ;;  # do nothing
   *)
-    code_red "[ERROR] ${bin_dir} was not found in \$PATH!"
+    code_err "[ERROR] ${bin_dir} was not found in \$PATH!"
     printf '%s\n' "Add ${bin_dir} to PATH or select another directory to install to"
     exit 1
     ;;
@@ -66,7 +66,7 @@ trap clean_up EXIT
 
 # Create temp directory
 tmp_dir="$(mktemp -d /tmp/aws.XXXXXXXX)"
-cd "${tmp_dir}" || { code_red "[ERROR] ${tmp_dir} doesn't exist." &&  exit 1; }
+cd "${tmp_dir}" || { code_err "[ERROR] ${tmp_dir} doesn't exist." &&  exit 1; }
 
 # Version Check
 curl -s -O https://raw.githubusercontent.com/aws/aws-cli/v2/CHANGELOG.rst
@@ -101,7 +101,7 @@ curl -s "${awsurl}" -o "${installer}"
 if [ "${os}" = "Linux" ]; then
   printf '%s\n' "[INFO] Downloading aws-cli installer signature file"
   if ! gpg -k "${gpg_key}"; then
-    code_red "[ERROR] AWS GPG Key not found"
+    code_err "[ERROR] AWS GPG Key not found"
     printf '%s\n' "Get it from here: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html"
     exit 1
   else
@@ -156,7 +156,7 @@ EOF
           unzip -q "${installer}"
           ./aws/install --bin-dir "${bin_dir}" --install-dir "${aws_dir}"
       else
-          code_red "[ERROR] File failed GPG verification. Exiting."
+          code_err "[ERROR] File failed GPG verification. Exiting."
           exit 1
       fi
       ;;
